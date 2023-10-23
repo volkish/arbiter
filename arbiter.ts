@@ -84,7 +84,7 @@ const fastifyInstance = fastify({
 fastifyInstance.register(fastifyWebsocket);
 fastifyInstance.register(async function (fastify) {
   fastify.get('/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
-    connection.socket.on('message', message => {
+    connection.socket.on('message', (_) => {
       // message.toString() === 'hi from client'
       // connection.socket.send('hi from server');
     });
@@ -103,7 +103,7 @@ function broadcast () {
   }).catch(() => void 0);
 }
 
-fastifyInstance.register(async (req, res, next) => {
+fastifyInstance.register(async (_, res, next) => {
   next();
 
   if (!res.headersSent) {
@@ -211,9 +211,9 @@ fastifyInstance.get('/list', async () => {
 
 // region Admin Panel
 
-fastifyInstance.get('/', (req, res) => {
+fastifyInstance.get('/', (_, res) => {
   return new Promise(resolve => {
-    readFile('./arbiter-src/admin/index.html', (err, buffer) => {
+    readFile('./arbiter-src/admin/index.html', (_, buffer) => {
       resolve(
           res.code(200)
               .type('text/html')

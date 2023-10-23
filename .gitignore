@@ -2,3 +2,4 @@ node_modules/
 proxies.json
 backup/
 bun.lockb
+dist
