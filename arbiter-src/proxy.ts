@@ -73,7 +73,7 @@ export default abstract class Proxy extends EventEmitter {
 
     // Выдали максимум сколько можно токенов,
     // помечаем что прокси нужна перезагрузка
-    if (this.tokensAcquired === max) {
+    if (this.tokensAcquired >= max) {
       this.maintenance = true;
     }
 
