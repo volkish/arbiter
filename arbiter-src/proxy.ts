@@ -61,21 +61,21 @@ export default abstract class Proxy extends EventEmitter {
    */
   acquire (max: number) {
     if (
-        !this.enabled || // Прокси выключен
-        this.maintenance || // Прокси ожидает перезагрузку
-        this.lastError // Ошибка прокси
+      !this.enabled || // Прокси выключен
+      this.maintenance || // Прокси ожидает перезагрузку
+      this.lastError // Ошибка прокси
     ) {
       return;
     }
 
-    this.activeTokens++; // Активные токены
-    this.tokensAcquired++; // Всего сколько было выдано токенов
-
     // Выдали максимум сколько можно токенов,
     // помечаем что прокси нужна перезагрузка
-    if (this.tokensAcquired >= max) {
+    if (++this.tokensAcquired >= max) {
       this.maintenance = true;
     }
+
+    // Активные токены
+    this.activeTokens++;
 
     // Дата последнего доступа к прокси
     this.lastAccessTimestamp = (new Date()).getTime();
@@ -87,13 +87,14 @@ export default abstract class Proxy extends EventEmitter {
 
       // Активных токенов больше не осталось.
       // Если прокси требуется перезагрузка и прокси ещё включено, то перезагружаем
-      if (this.activeTokens === 0 && this.maintenance) {
+      if (this.activeTokens <= 0 && this.maintenance) {
         this.emit('will-restart');
 
         if (this.enabled) {
           await this.restart();
         }
 
+        this.activeTokens = 0;
         this.maintenance = false;
         this.emit('did-restart');
       }
@@ -255,7 +256,7 @@ export default abstract class Proxy extends EventEmitter {
       this.log('Успешно загрузил shxcraw.club');
     } catch (e: AxiosError | any) {
       throw new Error('Не смог загрузить robots.txt [' + e.message + '] [' + e.name + '] Data: ' + (
-          JSON.stringify(e.response?.data)
+        JSON.stringify(e.response?.data)
       ) + ' Headers: ' + JSON.stringify(e.response?.headers));
     }
   }
@@ -295,8 +296,8 @@ export default abstract class Proxy extends EventEmitter {
     }
 
     throw new Error('Не смог проверить IP адрес [' + error!.message + '] [' + error!.name + ']' +
-        ' Data: ' + JSON.stringify(error!.response?.data) +
-        ' Headers: ' + JSON.stringify(error!.response?.headers)
+      ' Data: ' + JSON.stringify(error!.response?.data) +
+      ' Headers: ' + JSON.stringify(error!.response?.headers)
     );
   }
 

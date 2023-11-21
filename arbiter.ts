@@ -17,11 +17,11 @@ const arbiterConfig = require('./proxies.json') as {
 };
 
 const proxies: Array<Proxy> = arbiterConfig
-    .list
-    .filter(data => data.type !== 'MobileProxySpace')
-    .map(data => ProxyFactory.createFromJSON(data)) // Создаем Proxy объект
-    .sort((p1, p2) => p1.connectionString.localeCompare(p2.connectionString))
-    .sort((p1, p2) => p1.constructor.name.localeCompare(p2.constructor.name));
+  .list
+  .filter(data => data.type !== 'MobileProxySpace')
+  .map(data => ProxyFactory.createFromJSON(data)) // Создаем Proxy объект
+  .sort((p1, p2) => p1.connectionString.localeCompare(p2.connectionString))
+  .sort((p1, p2) => p1.constructor.name.localeCompare(p2.constructor.name));
 
 /**
  * Чекалка модемов
@@ -55,8 +55,8 @@ function saveProxies () {
       copyFile('./proxies.json', `./backup/proxies.${date.getFullYear()}-${date.getMonth()}-${date.getDate()}.json`, (err) => {
         if (!err) {
           const list = proxies
-              .filter(proxy => proxy instanceof LocalProxy)
-              .map(proxy => proxy.toJson());
+            .filter(proxy => proxy instanceof LocalProxy)
+            .map(proxy => proxy.toJson());
 
           writeFile('./proxies.json', JSON.stringify({
             ...arbiterConfig,
@@ -95,7 +95,7 @@ function broadcast () {
   new Promise(r => {
     for (let client of fastifyInstance.websocketServer.clients) {
       client.send(JSON.stringify(
-          presenters.list(proxies)
+        presenters.list(proxies)
       ));
     }
 
@@ -113,60 +113,66 @@ fastifyInstance.register(async (_, res, next) => {
 
 // region Api
 
-fastifyInstance.get('/acquire', async (request: FastifyRequest<{
-  Querystring: { timeout: string }
-}>, reply: FastifyReply<any>) => {
+fastifyInstance.get('/acquire', (
+  request: FastifyRequest<{ Querystring: { timeout: string } }>,
+  reply
+) => {
   const timeout = Number(request.query.timeout || PROXY_TIMEOUT);
 
-  // Всегда берем самые старые прокси
-  const sortedProxies = proxies.sort((proxy1, proxy2) =>
-      proxy1.lastAccessTimestamp - proxy2.lastAccessTimestamp);
+  return new Promise(resolve => {
+    queue.then(() => {
+      // Всегда берем самые старые прокси
+      const sortedProxies = proxies.sort((proxy1, proxy2) =>
+        proxy1.lastAccessTimestamp - proxy2.lastAccessTimestamp);
 
-  for (const proxy of sortedProxies) {
-    const token = proxy.acquire(ACTIVE_TOKENS_LIMIT);
+      for (const proxy of sortedProxies) {
+        const token = proxy.acquire(ACTIVE_TOKENS_LIMIT);
 
-    if (token) {
-      let timer: NodeJS.Timeout | undefined = setTimeout(
-          () => {
-            proxy.log(`[${token.id}] Таймут`);
+        if (token) {
+          let timer: NodeJS.Timeout | undefined = setTimeout(
+            () => {
+              proxy.log(`[${token.id}] Таймут`);
 
-            token.destroy();
-          },
-          timeout * 60000,
-      );
+              token.destroy();
+            },
+            timeout * 60000,
+          );
 
-      // Запоминает токен в регистре,
-      // это нужно будет для того чтобы
-      // его найти в дальнейшем для удаления
-      TokenRegistry.set(token);
+          // Запоминает токен в регистре,
+          // это нужно будет для того чтобы
+          // его найти в дальнейшем для удаления
+          TokenRegistry.set(token);
 
-      // Когда токен удаляется, нужно удалить его из регистра
-      token.once('destroy', () => {
-        proxy.log(`[${token.id}] Удален`);
+          // Когда токен удаляется, нужно удалить его из регистра
+          token.once('destroy', () => {
+            proxy.log(`[${token.id}] Удален`);
 
-        TokenRegistry.delete(token);
+            TokenRegistry.delete(token);
 
-        // Удаляем таймер
-        if (timer) {
-          clearTimeout(timer);
-          timer = undefined;
+            // Удаляем таймер
+            if (timer) {
+              clearTimeout(timer);
+              timer = undefined;
+            }
+          });
+
+          proxy.log(`Выдал прокси на ${timeout} минут. Токен ${token.id}`);
+
+          broadcast();
+
+          resolve({
+            ...proxy.dump(),
+            token: token.id,
+          });
+
+          return;
         }
-      });
+      }
 
-      proxy.log(`Выдал прокси на ${timeout} минут. Токен ${token.id}`);
-
-      broadcast();
-
-      return {
-        ...proxy.dump(),
-        token: token.id,
-      };
-    }
-  }
-
-  reply.status(429);
-
-  return {};
+      reply.status(429);
+      resolve({});
+    });
+  });
 });
 
 fastifyInstance.get('/release', async (request: FastifyRequest<{
@@ -200,11 +206,11 @@ fastifyInstance.get('/check', async () => {
 
 fastifyInstance.get('/list', async () => {
   return proxies
-      .sort((p1, p2) => p1.connectionString.localeCompare(p2.connectionString))
-      .sort((p1, p2) => p1.constructor.name.localeCompare(p2.constructor.name))
-      .map(proxy => {
-        return proxy.connectionString + ' [SOCKS5] [' + proxy.connectionString + ']';
-      }).join('\n');
+    .sort((p1, p2) => p1.connectionString.localeCompare(p2.connectionString))
+    .sort((p1, p2) => p1.constructor.name.localeCompare(p2.constructor.name))
+    .map(proxy => {
+      return proxy.connectionString + ' [SOCKS5] [' + proxy.connectionString + ']';
+    }).join('\n');
 });
 
 // endregion
@@ -215,9 +221,9 @@ fastifyInstance.get('/', (_, res) => {
   return new Promise(resolve => {
     readFile('./arbiter-src/admin/index.html', (_, buffer) => {
       resolve(
-          res.code(200)
-              .type('text/html')
-              .send(buffer)
+        res.code(200)
+          .type('text/html')
+          .send(buffer)
       );
     });
   });
@@ -335,15 +341,15 @@ async function getExternalProxies () {
   const externalProxies = await MobileProxySpace.getList();
 
   externalProxies?.forEach(
-      externalProxy => {
-        console.log('[System] Внешний прокси:', externalProxy.proxy_id, ' адрес:', `${externalProxy.proxy_host_ip}:${externalProxy.proxy_socks5_port}`);
+    externalProxy => {
+      console.log('[System] Внешний прокси:', externalProxy.proxy_id, ' адрес:', `${externalProxy.proxy_host_ip}:${externalProxy.proxy_socks5_port}`);
 
-        proxies.push(new MobileProxySpace({
-          proxyId: externalProxy.proxy_id,
-          connectionString: `${externalProxy.proxy_host_ip}:${externalProxy.proxy_socks5_port}`,
-          enabled: true,
-        }));
-      },
+      proxies.push(new MobileProxySpace({
+        proxyId: externalProxy.proxy_id,
+        connectionString: `${externalProxy.proxy_host_ip}:${externalProxy.proxy_socks5_port}`,
+        enabled: true,
+      }));
+    },
   );
 }
 
