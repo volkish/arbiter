@@ -123,7 +123,7 @@ fastifyInstance.get('/acquire', (
     queue = queue.then(() => {
       // Всегда берем самые старые прокси
       const sortedProxies = proxies
-        .toSorted((proxy1, proxy2) => proxy1.lastAccessTimestamp - proxy2.lastAccessTimestamp)
+        .sort((proxy1, proxy2) => proxy1.lastAccessTimestamp - proxy2.lastAccessTimestamp)
         .filter(proxy => proxy.available);
 
       for (const proxy of sortedProxies) {
