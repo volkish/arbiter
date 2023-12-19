@@ -55,23 +55,27 @@ export default abstract class Proxy extends EventEmitter {
     this.emit('log', `[${new Date}] [${this.constructor.name}] [${this.connectionString}] ${message}`);
   }
 
+  get available () {
+    return this.enabled && !this.maintenance && !this.lastError;
+  }
+
   /**
    * Получить токен подключения к прокси
    * @param max
    */
   acquire (max: number) {
-    if (
-      !this.enabled || // Прокси выключен
-      this.maintenance || // Прокси ожидает перезагрузку
-      this.lastError // Ошибка прокси
-    ) {
+    if (!this.available) {
       return;
     }
 
+    this.tokensAcquired++;
+
     // Выдали максимум сколько можно токенов,
     // помечаем что прокси нужна перезагрузка
-    if (++this.tokensAcquired >= max) {
+    if (this.tokensAcquired === max) {
       this.maintenance = true;
+    } else if (this.tokensAcquired > max) {
+      return;
     }
 
     // Активные токены

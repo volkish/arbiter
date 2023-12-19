@@ -42,7 +42,7 @@ async function checkProxies () {
   return result;
 }
 
-const queue = Promise.resolve(true);
+let queue = Promise.resolve<any>(true);
 
 /**
  * Сохраняем прокси в файл
@@ -51,7 +51,7 @@ function saveProxies () {
   return new Promise((resolve, reject) => {
     const date = new Date();
 
-    queue.then(() => {
+    queue = queue.then(() => {
       copyFile('./proxies.json', `./backup/proxies.${date.getFullYear()}-${date.getMonth()}-${date.getDate()}.json`, (err) => {
         if (!err) {
           const list = proxies
@@ -120,10 +120,11 @@ fastifyInstance.get('/acquire', (
   const timeout = Number(request.query.timeout || PROXY_TIMEOUT);
 
   return new Promise(resolve => {
-    queue.then(() => {
+    queue = queue.then(() => {
       // Всегда берем самые старые прокси
-      const sortedProxies = proxies.sort((proxy1, proxy2) =>
-        proxy1.lastAccessTimestamp - proxy2.lastAccessTimestamp);
+      const sortedProxies = proxies
+        .toSorted((proxy1, proxy2) => proxy1.lastAccessTimestamp - proxy2.lastAccessTimestamp)
+        .filter(proxy => proxy.available);
 
       for (const proxy of sortedProxies) {
         const token = proxy.acquire(ACTIVE_TOKENS_LIMIT);
