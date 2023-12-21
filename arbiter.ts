@@ -171,7 +171,8 @@ fastifyInstance.get('/acquire', (
 
       reply.status(429);
       resolve({
-        sortedProxies
+        sortedProxies,
+        proxies
       });
     });
   });
