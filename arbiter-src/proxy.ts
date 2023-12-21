@@ -55,7 +55,7 @@ export default abstract class Proxy extends EventEmitter {
     this.emit('log', `[${new Date}] [${this.constructor.name}] [${this.connectionString}] ${message}`);
   }
 
-  get available () {
+  available () {
     return this.enabled && !this.maintenance && !this.lastError;
   }
 
@@ -64,7 +64,7 @@ export default abstract class Proxy extends EventEmitter {
    * @param max
    */
   acquire (max: number) {
-    if (!this.available) {
+    if (!this.available()) {
       return;
     }
 

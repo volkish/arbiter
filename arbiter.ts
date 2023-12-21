@@ -123,7 +123,7 @@ fastifyInstance.get('/acquire', (
       // Всегда берем самые старые прокси
       const sortedProxies = proxies
         .sort((proxy1, proxy2) => proxy1.lastAccessTimestamp - proxy2.lastAccessTimestamp)
-        .filter(proxy => proxy.available);
+        .filter(proxy => proxy.available());
 
       for (const proxy of sortedProxies) {
         const token = proxy.acquire(ACTIVE_TOKENS_LIMIT);
@@ -175,7 +175,7 @@ fastifyInstance.get('/acquire', (
         proxies,
         f: [
           typeof proxies[0].available,
-          proxies[0].available,
+          proxies[0].available(),
         ],
         x: proxies[0].enabled,
         t: proxies[0].lastError,
