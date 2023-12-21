@@ -172,7 +172,10 @@ fastifyInstance.get('/acquire', (
       reply.status(429);
       resolve({
         sortedProxies,
-        proxies
+        proxies,
+        f: proxies[0].available,
+        x: proxies[0].enabled,
+        t: proxies[0].lastError,
       });
     });
   });
