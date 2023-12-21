@@ -5,6 +5,7 @@ import ProxyFactory from './arbiter-src/proxy-factory';
 import TokenRegistry from './arbiter-src/token-registry';
 import MobileProxySpace from './arbiter-src/mobile-proxy-space';
 import LocalProxy from './arbiter-src/local-proxy';
+import queue from './arbiter-src/queue'
 import fastifyWebsocket, { SocketStream } from '@fastify/websocket';
 
 let ACTIVE_TOKENS_LIMIT = 5;
@@ -42,8 +43,6 @@ async function checkProxies () {
   return result;
 }
 
-let queue = Promise.resolve<any>(true);
-
 /**
  * Сохраняем прокси в файл
  */
@@ -51,7 +50,7 @@ function saveProxies () {
   return new Promise((resolve, reject) => {
     const date = new Date();
 
-    queue = queue.then(() => {
+    queue.add(() => {
       copyFile('./proxies.json', `./backup/proxies.${date.getFullYear()}-${date.getMonth()}-${date.getDate()}.json`, (err) => {
         if (!err) {
           const list = proxies
@@ -120,7 +119,7 @@ fastifyInstance.get('/acquire', (
   const timeout = Number(request.query.timeout || PROXY_TIMEOUT);
 
   return new Promise(resolve => {
-    queue = queue.then(() => {
+    queue.add(() => {
       // Всегда берем самые старые прокси
       const sortedProxies = proxies
         .sort((proxy1, proxy2) => proxy1.lastAccessTimestamp - proxy2.lastAccessTimestamp)
