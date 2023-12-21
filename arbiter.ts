@@ -173,7 +173,10 @@ fastifyInstance.get('/acquire', (
       resolve({
         sortedProxies,
         proxies,
-        f: proxies[0].available,
+        f: [
+          typeof proxies[0].available,
+          proxies[0].available,
+        ],
         x: proxies[0].enabled,
         t: proxies[0].lastError,
       });
