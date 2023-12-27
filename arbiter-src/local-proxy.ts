@@ -157,10 +157,19 @@ export default class LocalProxy extends Proxy {
       const { response: { FullName } } = rawResponse;
 
       return FullName[0];
-    } catch (e: any) {
-      this.log('Ошибка определения оператора: ' + e.message);
+    } catch {
+      try {
+        const { data: xml } = await client.get('/api/net/current-plmn');
+        const rawResponse = await parseStringPromise(xml);
 
-      return '';
+        const { response: { FullName } } = rawResponse;
+
+        return FullName[0];
+      } catch (e) {
+        this.log('Ошибка определения оператора: ' + e.message);
+
+        return '';
+      }
     }
   }
 
