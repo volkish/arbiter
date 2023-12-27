@@ -158,7 +158,7 @@ export default class LocalProxy extends Proxy {
 
       return FullName[0];
     } catch (e: any) {
-      this.log('Ошибка определения оператора: ' + e.message + '. Response: ' + rawResponse);
+      this.log('Ошибка определения оператора: ' + e.message);
 
       return '';
     }
