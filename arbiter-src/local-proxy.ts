@@ -164,9 +164,9 @@ export default class LocalProxy extends Proxy {
 
       const { response: { FullName } } = rawResponse;
 
-      this.log("Оператор: " + FullName[0])
+      this.log('Оператор: ' + FullName[0]);
 
-      return FullName[0];
+      this.operator = FullName[0];
     } catch {
       try {
         const { data: xml } = await client.get('/api/net/current-plmn');
@@ -174,13 +174,13 @@ export default class LocalProxy extends Proxy {
 
         const { response: { FullName } } = rawResponse;
 
-        this.log("Оператор: " + FullName[0])
+        this.log('Оператор: ' + FullName[0]);
 
-        return FullName[0];
+        this.operator = FullName[0];
       } catch (e: any) {
         this.log('Ошибка определения оператора: ' + e.message);
 
-        return '';
+        this.operator = 'ERROR';
       }
     }
   }
@@ -214,7 +214,7 @@ export default class LocalProxy extends Proxy {
     // Запускаем интернет на модеме
     await dataSwitchRequest(this, 1);
 
-    // Ждем пока пока модем подключится к сети
+    // Ждем пока модем подключится к сети
     await waitUntilOn(this);
 
     // Узнаем какой сейчас оператор
