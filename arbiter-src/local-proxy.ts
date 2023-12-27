@@ -164,6 +164,8 @@ export default class LocalProxy extends Proxy {
 
       const { response: { FullName } } = rawResponse;
 
+      this.log("Оператор: " + FullName[0])
+
       return FullName[0];
     } catch {
       try {
@@ -171,6 +173,8 @@ export default class LocalProxy extends Proxy {
         const rawResponse = await parseStringPromise(xml);
 
         const { response: { FullName } } = rawResponse;
+
+        this.log("Оператор: " + FullName[0])
 
         return FullName[0];
       } catch (e: any) {
