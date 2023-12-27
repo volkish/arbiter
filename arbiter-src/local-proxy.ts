@@ -120,6 +120,14 @@ export default class LocalProxy extends Proxy {
     return true;
   }
 
+  async initialize (): Promise<void> {
+    await super.initialize();
+
+    if (this.enabled) {
+      await this.getOperator();
+    }
+  }
+
   async getAccountBalance () {
     const client = await getSignedClient(this);
 
