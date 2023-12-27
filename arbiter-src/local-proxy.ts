@@ -1,9 +1,9 @@
-import Proxy from './proxy'
-import axios, { AxiosRequestConfig } from 'axios'
-import url from 'url'
-import { delay } from './utils'
+import Proxy from './proxy';
+import axios, { AxiosRequestConfig } from 'axios';
+import url from 'url';
+import { delay } from './utils';
 
-const { parseStringPromise } = require('xml2js')
+const { parseStringPromise } = require('xml2js');
 
 interface Args {
   enabled: boolean,
@@ -22,80 +22,80 @@ const getSignedClient = async (proxy: LocalProxy) => {
       'Accept': '*/*',
     },
     maxRedirects: 0,
-  }
+  };
 
-  const client = axios.create(params)
+  const client = axios.create(params);
 
-  const { data: xml } = await client.get('/api/webserver/SesTokInfo')
-  const { response: { SesInfo, TokInfo } } = await parseStringPromise(xml)
+  const { data: xml } = await client.get('/api/webserver/SesTokInfo');
+  const { response: { SesInfo, TokInfo } } = await parseStringPromise(xml);
 
   client.defaults.headers = {
     ...client.defaults.headers,
     'Cookie': SesInfo[0],
     '__RequestVerificationToken': TokInfo[0],
-  }
+  };
 
-  return client
-}
+  return client;
+};
 
 const dataSwitchRequest = async (proxy: LocalProxy, status: number) => {
-  const client = await getSignedClient(proxy)
+  const client = await getSignedClient(proxy);
 
   await client.post('/api/dialup/mobile-dataswitch',
-      `<?xml version: "1.0" encoding="UTF-8"?><request><dataswitch>${status}</dataswitch></request>`,
-  )
+    `<?xml version: "1.0" encoding="UTF-8"?><request><dataswitch>${status}</dataswitch></request>`,
+  );
 
-  proxy.log(`Изменил состояние модема ${status}`)
-}
+  proxy.log(`Изменил состояние модема ${status}`);
+};
 
 const waitUntilOff = async (proxy: LocalProxy) => {
-  proxy.log(`Ожидаю выключения`)
+  proxy.log(`Ожидаю выключения`);
 
   while (true) {
-    const wanIPAddress = await checkStatus(proxy)
+    const wanIPAddress = await checkStatus(proxy);
 
     if (!wanIPAddress) {
-      proxy.log(`Модем выключен`)
+      proxy.log(`Модем выключен`);
 
-      return
+      return;
     }
 
-    await delay(500)
+    await delay(500);
   }
-}
+};
 
 const waitUntilOn = async (proxy: LocalProxy) => {
-  proxy.log(`Пробую включить модем`)
+  proxy.log(`Пробую включить модем`);
 
-  let tries = 20
+  let tries = 20;
 
   while (--tries > 0) {
-    const wanIPAddress = await checkStatus(proxy)
+    const wanIPAddress = await checkStatus(proxy);
 
     if (wanIPAddress) {
-      return wanIPAddress
+      return wanIPAddress;
     }
 
-    await delay(500)
+    await delay(500);
   }
 
-  throw new Error('Не смог включить интернет!')
-}
+  throw new Error('Не смог включить интернет!');
+};
 
 const checkStatus = async (proxy: LocalProxy): Promise<boolean> => {
-  const client = await getSignedClient(proxy)
+  const client = await getSignedClient(proxy);
 
-  const { data: xml } = await client.get('/api/monitoring/status')
-  const { response } = await parseStringPromise(xml)
+  const { data: xml } = await client.get('/api/monitoring/status');
+  const { response } = await parseStringPromise(xml);
 
-  return response['PrimaryDns'][0]
-}
+  return response['PrimaryDns'][0];
+};
 
 export default class LocalProxy extends Proxy {
 
   // Адрес API для урпавления модемов
-  operator: string
-  apiEndpoint: string
+  operator: string;
+  apiEndpoint: string;
 
   constructor ({
     operator,
@@ -104,101 +104,99 @@ export default class LocalProxy extends Proxy {
     connectionString,
   }: Args) {
     super(
-        connectionString,
-        enabled,
-    )
+      connectionString,
+      enabled,
+    );
 
-    this.operator = operator
-    this.apiEndpoint = apiEndpoint
+    this.operator = operator;
+    this.apiEndpoint = apiEndpoint;
   }
 
   async update ({ apiEndpoint, connectionString, enabled }: any) {
-    this.enabled = enabled
-    this.connectionString = connectionString
-    this.apiEndpoint = apiEndpoint
+    this.enabled = enabled;
+    this.connectionString = connectionString;
+    this.apiEndpoint = apiEndpoint;
 
-    return true
+    return true;
   }
-  
+
   async getAccountBalance () {
-    const client = await getSignedClient(this)
+    const client = await getSignedClient(this);
 
-    const { data: xml } = await client.post('/api/ussd/send', 
+    const { data: xml } = await client.post('/api/ussd/send',
       `<?xml version="1.0" encoding="UTF-8"?><request><content>*100#</content><codeType>CodeType</codeType><timeout></timeout></request>`
-    )
-	
-    const doc = await parseStringPromise(xml)
-	
-    if (doc?.response === 'OK') {
-      let tries = 10
-	
-      while (tries-- > 0) {
-        const { data: xml } = await client.get('/api/ussd/get')
-        const doc = await parseStringPromise(xml)
+    );
 
-		if (doc?.response) {
-          return doc.response.content[0]
+    const doc = await parseStringPromise(xml);
+
+    if (doc?.response === 'OK') {
+      let tries = 10;
+
+      while (tries-- > 0) {
+        const { data: xml } = await client.get('/api/ussd/get');
+        const doc = await parseStringPromise(xml);
+
+        if (doc?.response) {
+          return doc.response.content[0];
         }
 
-        await delay(2000)
-	  }
-	}
+        await delay(2000);
+      }
+    }
 
-	return 'UNKNOWN'
+    return 'UNKNOWN';
   }
 
   async getOperator () {
-    const client = await getSignedClient(this)
-
-    // /operator.cgi
-
-    const { data: xml } = await client.get('/operator.cgi')
-    const rawResponse = await parseStringPromise(xml)
+    const client = await getSignedClient(this);
 
     try {
-      const { response: { FullName } } = rawResponse
+      const { data: xml } = await client.get('/operator.cgi');
+      const rawResponse = await parseStringPromise(xml);
 
-      return FullName[0]
+      const { response: { FullName } } = rawResponse;
+
+      return FullName[0];
     } catch (e: any) {
-      this.log('Ошибка определения оператора: ' + e.message + '. Response: ' + rawResponse)
+      this.log('Ошибка определения оператора: ' + e.message + '. Response: ' + rawResponse);
 
-      return ''
+      return '';
     }
   }
 
-  toJson () : any {
+  toJson (): any {
     return {
       ...super.toJson(),
       operator: this.operator,
       apiEndpoint: this.apiEndpoint,
-    }
+    };
   }
 
   protected async performCheckStatus (): Promise<void> {
     if (!await checkStatus(this)) {
-      throw new Error('Модем не подключен к сети')
+      throw new Error('Модем не подключен к сети');
     }
 
-    await this.getOperator()
+    await this.getOperator();
   }
 
   protected async performRestart () {
     // Отключаем интернет на модеме
-    await dataSwitchRequest(this, 0)
+    await dataSwitchRequest(this, 0);
 
     // Ждём чтобы отключился модем
-    await waitUntilOff(this)
+    await waitUntilOff(this);
 
     // Ждем 10 секунд
-    await delay(1000 * 10)
+    await delay(1000 * 10);
 
     // Запускаем интернет на модеме
-    await dataSwitchRequest(this, 1)
+    await dataSwitchRequest(this, 1);
 
     // Ждем пока пока модем подключится к сети
-    await waitUntilOn(this)
+    await waitUntilOn(this);
 
     // Узнаем какой сейчас оператор
-    await this.getOperator()
+    await this.getOperator();
   }
 }
