@@ -108,7 +108,7 @@ export default class LocalProxy extends Proxy {
       enabled,
     );
 
-    this.operator = operator;
+    this.operator = 'UNKNOWN';
     this.apiEndpoint = apiEndpoint;
   }
 
