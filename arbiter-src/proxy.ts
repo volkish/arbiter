@@ -68,14 +68,10 @@ export default abstract class Proxy extends EventEmitter {
       return;
     }
 
-    this.tokensAcquired++;
-
-    // Выдали максимум сколько можно токенов,
-    // помечаем что прокси нужна перезагрузка
-    if (this.tokensAcquired === max) {
-      this.maintenance = true;
-    } else if (this.tokensAcquired > max) {
+    if (this.tokensAcquired >= max) {
       return;
+    } else if (++this.tokensAcquired === max) {
+      this.maintenance = true;
     }
 
     // Активные токены

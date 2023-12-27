@@ -152,7 +152,7 @@ export default class LocalProxy extends Proxy {
 
     // /operator.cgi
 
-    const { data: xml } = await client.get('/api/net/current-plmn')
+    const { data: xml } = await client.get('/operator.cgi')
     const rawResponse = await parseStringPromise(xml)
 
     try {
