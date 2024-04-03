@@ -48,8 +48,6 @@ export default class MobileProxySpace extends Proxy {
     return (await client.get<Array<IProxy>>(ENDPOINT + '/api.html?command=get_my_proxy')).data
   }
 
-  proxyId: string
-
   constructor ({ proxyId, connectionString, enabled }: Args) {
     super(connectionString, enabled)
 
@@ -71,7 +69,6 @@ export default class MobileProxySpace extends Proxy {
   toJson (): any {
     return {
       ...super.toJson(),
-      proxyId: this.proxyId,
     }
   }
 

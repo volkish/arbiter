@@ -112,7 +112,8 @@ export default class LocalProxy extends Proxy {
     this.apiEndpoint = apiEndpoint;
   }
 
-  async update ({ apiEndpoint, connectionString, enabled }: any) {
+  async update ({ apiEndpoint, connectionString, proxyId, enabled }: any) {
+    this.proxyId = proxyId
     this.enabled = enabled;
     this.connectionString = connectionString;
     this.apiEndpoint = apiEndpoint;

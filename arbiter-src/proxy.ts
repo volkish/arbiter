@@ -40,6 +40,11 @@ export default abstract class Proxy extends EventEmitter {
   /** IP адрес */
   ipAddress: string = '';
 
+  /**
+   * Уникальный ИД (например телефон)
+   */
+  proxyId: string = '';
+
   /** Требуется обслуживание */
   protected maintenance: boolean = false;
 
@@ -200,6 +205,7 @@ export default abstract class Proxy extends EventEmitter {
       type: this.constructor.name,
       connectionString: this.connectionString,
       enabled: this.enabled,
+      proxyId: this.proxyId,
     };
   }
 

@@ -1,413 +1,403 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>
-        Админка по прокси
-    </title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css"
-          integrity="sha512-IgmDkwzs96t4SrChW29No3NXBIBv8baW490zk5aXvhCD8vuZM3yUSkbyTBcXohkySecyzIrUwiF/qV0cuPcL3Q=="
-          crossorigin="anonymous" referrerpolicy="no-referrer"/>
-    <script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
-    <script src="https://unpkg.com/vue-router@2.0.0/dist/vue-router.js"></script>
-    <style>
-        [v-cloak] {
-            display: none;
-        }
-    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>
+		Админка по прокси
+	</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.9.3/css/bulma.min.css"
+				integrity="sha512-IgmDkwzs96t4SrChW29No3NXBIBv8baW490zk5aXvhCD8vuZM3yUSkbyTBcXohkySecyzIrUwiF/qV0cuPcL3Q=="
+				crossorigin="anonymous" referrerpolicy="no-referrer"/>
+	<script src="https://unpkg.com/vue@2.6.14/dist/vue.js"></script>
+	<script src="https://unpkg.com/vue-router@2.0.0/dist/vue-router.js"></script>
+	<style>
+		[v-cloak] {
+			display: none;
+		}
+	</style>
 </head>
 <body>
 <div id="app" v-cloak>
-    <div v-if="loading" class="p-2" style="background:#fff;position:absolute; top:0;width: 100%;">
-        <progress class="progress is-danger" max="100"></progress>
-    </div>
+	<div v-if="loading" class="p-2" style="background:#fff;position:absolute; top:0;width: 100%;">
+		<progress class="progress is-danger" max="100"></progress>
+	</div>
 
-    <section class="section">
-        <div class="container">
-            <h1 class="title mb-5">
-                Админка по прокси
-            </h1>
-            <router-view></router-view>
-        </div>
-    </section>
+	<section class="section">
+		<div class="container">
+			<h1 class="title mb-5">
+				Админка по прокси
+			</h1>
+			<router-view></router-view>
+		</div>
+	</section>
 </div>
 <script type="x-template" id="list-template">
-    <div>
-        <router-link to="/add" class="button is-link">Добавить прокси</router-link>
-        <div class="mt-2 mb-5 table-container">
-            <table class="table is-fullwidth">
-                <thead>
-                <tr>
-                    <th>Type</th>
-                    <th>Connection String</th>
-                    <th>Active Tokens</th>
-                    <th>Tokens Acquired</th>
-                    <th>Ip</th>
-                    <th width="20%">Status</th>
-                    <th width="1%">&nbsp;</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr v-for="proxy in proxies">
-                    <th>
-                        {{ proxy.type }}
-                        <span>
-                            {{ proxy.operator || proxy.proxyId }}
-                        </span>
-                    </th>
-                    <td>{{ proxy.connectionString }}</td>
-                    <td>{{ proxy.activeTokens }}</td>
-                    <td>{{ proxy.tokensAcquired }}</td>
-                    <td>{{ proxy.ipAddress }}</td>
-                    <td>
-                        <span class="tag" :class="{ [proxy.status.tag]: true }" style="white-space: normal; height: auto; min-width: 2em; word-break: break-all">
-                            {{ proxy.status.status }}
-                        </span>
-                    </td>
-                    <td>
-                        <router-link :to="`/edit/${proxy.id}`" class="button is-small">Редактировать</router-link>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
+	<div>
+		<router-link to="/add" class="button is-link">Добавить прокси</router-link>
+		<div class="mt-2 mb-5 table-container">
+			<table class="table is-fullwidth">
+				<thead>
+				<tr>
+					<th width="1%">Type</th>
+					<th>Connection String</th>
+					<th width="1%">Active</th>
+					<th width="1%">Total</th>
+					<th width="1%">Ip</th>
+					<th width="25%">Status</th>
+					<th width="1%">&nbsp;</th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr v-for="proxy in proxies">
+					<th>
+						<small style="white-space: nowrap">
+							{{ proxy.operator }} /
+							{{ proxy.proxyId }}
+						</small>
+					</th>
+					<td>{{ proxy.connectionString }}</td>
+					<td>{{ proxy.activeTokens }}</td>
+					<td>{{ proxy.tokensAcquired }}</td>
+					<td>{{ proxy.ipAddress }}</td>
+					<td>
+						<span class="tag" :class="{ [proxy.status.tag]: true }" style="white-space: normal; height: auto; min-width: 2em; word-break: break-all">
+								{{ proxy.status.status }}
+						</span>
+					</td>
+					<td>
+						<router-link :to="`/edit/${proxy.id}`" class="button is-small">Редактировать</router-link>
+					</td>
+				</tr>
+				</tbody>
+			</table>
+		</div>
 
-        <div class="columns">
-            <form class="column is-half" method="post" @submit.prevent="updateLimit">
-                <div class="field">
-                    <label class="label">Limit</label>
-                    <div class="control">
-                        <input class="input" type="number" min="1" max="100" v-model="limit">
-                    </div>
-                </div>
-                <div class="field is-grouped">
-                    <div class="control">
-                        <button class="button is-link">Сохранить</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+		<div class="columns">
+			<form class="column is-half" method="post" @submit.prevent="updateLimit">
+				<div class="field">
+					<label class="label">Limit</label>
+					<div class="control">
+						<input class="input" type="number" min="1" max="100" v-model="limit">
+					</div>
+				</div>
+				<div class="field is-grouped">
+					<div class="control">
+						<button class="button is-link">Сохранить</button>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
 </script>
 <script type="x-template" id="edit-template">
-    <div>
-        <nav class="breadcrumb">
-            <ul>
-                <li>
-                    <router-link to="/">Список</router-link>
-                </li>
-                <li class="is-active"><a href="#">Прокси</a></li>
-            </ul>
-        </nav>
+	<div>
+		<nav class="breadcrumb">
+			<ul>
+				<li>
+					<router-link to="/">Список</router-link>
+				</li>
+				<li class="is-active"><a href="#">Прокси</a></li>
+			</ul>
+		</nav>
 
-        <template v-if="error">
-            Такой прокси не найден
-        </template>
-        <template v-else-if="proxy">
-            <form method="post" @submit.prevent="handleForm">
-                <div v-if="proxy.id" class="field mb-5">
-                    <div class="control">
-                        <label class="label">Status</label>
-                        <span class="tag" :class="{ [proxy.status.tag]: true }">
+		<template v-if="error">
+			Такой прокси не найден
+		</template>
+		<template v-else-if="proxy">
+			<form method="post" @submit.prevent="handleForm">
+				<div v-if="proxy.id" class="field mb-5">
+					<div class="control">
+						<label class="label">Status</label>
+						<span class="tag" :class="{ [proxy.status.tag]: true }">
                             {{ proxy.status.status }}
                         </span>
-                    </div>
-                </div>
+					</div>
+				</div>
 
-                <div class="field">
-                    <div class="control">
-                        <label class="checkbox">
-                            <input type="checkbox" v-model="proxy.enabled">
-                            Включить прокси?
-                        </label>
-                    </div>
-                </div>
+				<div class="field">
+					<div class="control">
+						<label class="checkbox">
+							<input type="checkbox" v-model="proxy.enabled">
+							Включить прокси?
+						</label>
+					</div>
+				</div>
 
-                <div v-if="!proxy.id" class="field">
-                    <label class="label">Type</label>
-                    <div class="control">
-                        <div class="select">
-                            <select v-model="proxy.type">
-                                <option>LocalProxy</option>
-                                <option>MobileProxySpace</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+				<div v-if="!proxy.id" class="field">
+					<label class="label">Type</label>
+					<div class="control">
+						<div class="select">
+							<select v-model="proxy.type">
+								<option>LocalProxy</option>
+								<option>MobileProxySpace</option>
+							</select>
+						</div>
+					</div>
+				</div>
 
-                <div class="field">
-                    <label class="label">Connection String</label>
-                    <div class="control">
-                        <input class="input" type="text" v-model="proxy.connectionString">
-                    </div>
-                </div>
+				<div class="field">
+					<label class="label">Connection String</label>
+					<div class="control">
+						<input class="input" type="text" v-model="proxy.connectionString">
+					</div>
+				</div>
 
-                <div class="field" v-if="proxy.type === 'LocalProxy'">
-                    <label class="label">Api Endpoint</label>
-                    <div class="control">
-                        <input class="input" type="text" v-model="proxy.apiEndpoint">
-                    </div>
-                </div>
+				<div class="field" v-if="proxy.type === 'LocalProxy'">
+					<label class="label">Api Endpoint</label>
+					<div class="control">
+						<input class="input" type="text" v-model="proxy.apiEndpoint">
+					</div>
+				</div>
 
-                <div class="field" v-if="proxy.type === 'MobileProxySpace'">
-                    <label class="label">Proxy Id</label>
-                    <div class="control">
-                        <input class="input" type="text" v-model="proxy.proxyId">
-                    </div>
-                </div>
+				<div class="field">
+					<label class="label">Proxy Id</label>
+					<div class="control">
+						<input class="input" type="text" v-model="proxy.proxyId">
+					</div>
+				</div>
 
-                <div class="field is-grouped">
-                    <div class="control">
-							<button class="button is-link">Сохранить</button>
-							<button v-if="proxy.id" @click.prevent="checkBalance" class="button">Проверить баланс</button>
-							<span v-if="proxy.id && lastBalance">{{ lastBalance }}</span>
-                    </div>
-                </div>
-            </form>
-        </template>
-    </div>
+				<div class="field is-grouped">
+					<div class="control">
+						<button class="button is-link">Сохранить</button>
+						<button v-if="proxy.id" @click.prevent="checkBalance" class="button">Проверить баланс</button>
+						<span v-if="proxy.id && lastBalance">{{ lastBalance }}</span>
+					</div>
+				</div>
+			</form>
+		</template>
+	</div>
 </script>
 <script>
-    Vue.use(VueRouter)
+	Vue.use(VueRouter)
 
-    function createProxy (proxy) {
-        return ({
-            ...proxy,
-            get status () {
-                if (proxy.lastError) {
-                    return {
-                        status: 'Ошибка: ' + proxy.lastError,
-                        tag: 'is-danger'
-                    }
-                } else if (!this.enabled) {
-                    return {
-                        status: 'Выключен',
-                        tag: 'is-white'
-                    }
-                } else if (proxy.restarting) {
-                    return {
-                        status: 'Перезагрузка',
-                        tag: 'is-link'
-                    }
-                } else if (proxy.maintenance) {
-                    return {
-                        status: 'Ожидает перезагрузки',
-                        tag: 'is-link is-light'
-                    }
-                } else {
-                    return {
-                        status: 'Готов к работе',
-                        tag: 'is-success'
-                    }
-                }
-            }
-        })
-    }
+	function createProxy (proxy) {
+		return ({
+			...proxy,
+			get status () {
+				if (proxy.lastError) {
+					return {
+						status: 'Ошибка: ' + proxy.lastError,
+						tag: 'is-danger'
+					}
+				} else if (!this.enabled) {
+					return {
+						status: 'Выключен',
+						tag: 'is-white'
+					}
+				} else if (proxy.restarting) {
+					return {
+						status: 'Перезагрузка',
+						tag: 'is-link'
+					}
+				} else if (proxy.maintenance) {
+					return {
+						status: 'Ожидает перезагрузки',
+						tag: 'is-link is-light'
+					}
+				} else {
+					return {
+						status: 'Готов к работе',
+						tag: 'is-success'
+					}
+				}
+			}
+		})
+	}
 
-    const List = {
-        template: '#list-template',
-        data () {
-            return { proxies: [], limit: '' }
-        },
-        methods: {
-            updateLimit () {
-                if (this.limit) {
-                    fetch('/api/limit?limit=' + this.limit, {
-                        method: 'POST',
-                    })
+	const List = {
+		template: '#list-template',
+		data () {
+			return { proxies: [], limit: '' }
+		},
+		methods: {
+			updateLimit () {
+				if (this.limit) {
+					fetch('/api/limit?limit=' + this.limit, {
+						method: 'POST',
+					})
 
-                    this.limit = '';
-                }
-            }
-        },
-        mounted () {
-            this.$root.$emit('start-loading')
-            this.$root.$on('proxies', (proxies) => {
-                this.proxies = proxies
-                    .map(createProxy)
-                    .sort((p1, p2) => p1.connectionString.localeCompare(p2.connectionString))
-            })
+					this.limit = ''
+				}
+			}
+		},
+		mounted () {
+			this.$root.$emit('start-loading')
+			this.$root.$on('proxies', (proxies) => {
+				this.proxies = proxies
+					.map(createProxy)
+					.sort((p1, p2) => p1.connectionString.localeCompare(p2.connectionString))
+			})
 
-            fetch('/api/proxies')
-                .then(res => res.json())
-                .then(data => {
-                    this.$root.$emit('stop-loading')
+			fetch('/api/proxies')
+				.then(res => res.json())
+				.then(data => {
+					this.$root.$emit('stop-loading')
 
-                    this.proxies = data
-                        .map(createProxy)
-                        .sort((p1, p2) => p1.connectionString.localeCompare(p2.connectionString))
-                })
-        }
-    }
+					this.proxies = data
+						.map(createProxy)
+						.sort((p1, p2) => p1.connectionString.localeCompare(p2.connectionString))
+				})
+		}
+	}
 
-    const Add = {
-        template: '#edit-template',
-        data () {
-            return {
-                error: null,
-                proxy: {}
-            }
-        },
-        methods: {
-            async handleForm (event) {
-                let data = {
-                    enabled: this.proxy.enabled,
-                    type: this.proxy.type,
-                    connectionString: this.proxy.connectionString,
-                }
+	const Add = {
+		template: '#edit-template',
+		data () {
+			return {
+				error: null,
+				proxy: {}
+			}
+		},
+		methods: {
+			async handleForm (event) {
+				let data = {
+					enabled: this.proxy.enabled,
+					type: this.proxy.type,
+					connectionString: this.proxy.connectionString,
+					proxyId: this.proxy.proxyId
+				}
 
-                if (this.proxy.type === 'LocalProxy') {
-                    data = {
-                        ...data,
-                        apiEndpoint: this.proxy.apiEndpoint
-                    }
-                }
-                else if (this.proxy.type === 'MobileProxySpace') {
-                    data = {
-                        ...data,
-                        proxyId: this.proxy.proxyId
-                    }
-                }
+				if (this.proxy.type === 'LocalProxy') {
+					data = {
+						...data,
+						apiEndpoint: this.proxy.apiEndpoint
+					}
+				}
 
-                this.$root.$emit('start-loading')
+				this.$root.$emit('start-loading')
 
-                await fetch('/api/proxies', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
+				await fetch('/api/proxies', {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(data)
+				})
 
-                this.$root.$emit('stop-loading')
-                this.$router.push('/')
-            }
-        }
-    }
+				this.$root.$emit('stop-loading')
+				this.$router.push('/')
+			}
+		}
+	}
 
-    const Edit = {
-        template: '#edit-template',
-        data () {
-            return {
-                error: null,
-                proxy: null,
+	const Edit = {
+		template: '#edit-template',
+		data () {
+			return {
+				error: null,
+				proxy: null,
 				lastBalance: '',
-            }
-        },
-        beforeRouteUpdate (to, from, next) {
-            this.proxy = null
-            this.getProxy(to.params.id, (err, proxy) => {
-                this.setData(err, proxy)
+			}
+		},
+		beforeRouteUpdate (to, from, next) {
+			this.proxy = null
+			this.getProxy(to.params.id, (err, proxy) => {
+				this.setData(err, proxy)
 
-                next()
-            })
-        },
-        mounted () {
-            this.getProxy(this.$route.params.id, (err, proxy) => {
-                this.setData(err, proxy)
-            })
-        },
-        methods: {
+				next()
+			})
+		},
+		mounted () {
+			this.getProxy(this.$route.params.id, (err, proxy) => {
+				this.setData(err, proxy)
+			})
+		},
+		methods: {
 			async checkBalance () {
 				this.$root.$emit('start-loading')
-				
-				console.log(this.proxy);
-				
+
+				console.log(this.proxy)
+
 				const response = await fetch('/api/balance/' + this.proxy.id)
 					.then(res => res.text())
 					.finally(() => this.$root.$emit('stop-loading'))
 
 				this.lastBalance = response
 			},
-		
-            async getProxy (id, callback) {
-                this.$root.$emit('start-loading')
 
-                const response = await fetch('/api/proxies/' + id)
-                    .then(res => {
-                        if (!res.ok) {
-                            throw new Error('Not 2xx response')
-                        }
+			async getProxy (id, callback) {
+				this.$root.$emit('start-loading')
 
-                        return res
-                    })
-                    .then(res => res.json())
-                    .then(res => callback(null, res))
-                    .catch(error => callback(error, null))
-                    .finally(() => this.$root.$emit('stop-loading'))
-            },
-            async handleForm (event) {
-                let data = {
-                    enabled: this.proxy.enabled,
-                    connectionString: this.proxy.connectionString,
-                }
+				const response = await fetch('/api/proxies/' + id)
+					.then(res => {
+						if (!res.ok) {
+							throw new Error('Not 2xx response')
+						}
 
-                if (this.proxy.type === 'LocalProxy') {
-                    data = {
-                        ...data,
-                        apiEndpoint: this.proxy.apiEndpoint
-                    }
-                }
-                else if (this.proxy.type === 'MobileProxySpace') {
-                    data = {
-                        ...data,
-                        proxyId: this.proxy.proxyId
-                    }
-                }
+						return res
+					})
+					.then(res => res.json())
+					.then(res => callback(null, res))
+					.catch(error => callback(error, null))
+					.finally(() => this.$root.$emit('stop-loading'))
+			},
+			async handleForm (event) {
+				let data = {
+					enabled: this.proxy.enabled,
+					connectionString: this.proxy.connectionString,
+					proxyId: this.proxy.proxyId
+				}
 
-                this.$root.$emit('start-loading')
+				if (this.proxy.type === 'LocalProxy') {
+					data = {
+						...data,
+						apiEndpoint: this.proxy.apiEndpoint
+					}
+				}
 
-                await fetch('/api/proxies/' + this.$route.params.id, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(data)
-                })
-                    .then(res => {
-                        if (!res.ok) {
-                            throw new Error
-                        }
+				this.$root.$emit('start-loading')
 
-                        return res
-                    })
-                    .then(res => res.json())
-                    .then(res => this.setData(null, res))
+				await fetch('/api/proxies/' + this.$route.params.id, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(data)
+				})
+					.then(res => {
+						if (!res.ok) {
+							throw new Error
+						}
 
-                this.$root.$emit('stop-loading')
-            },
-            setData (error, proxy) {
-                this.error = error
-                this.proxy = createProxy(proxy)
-            }
-        }
-    }
+						return res
+					})
+					.then(res => res.json())
+					.then(res => this.setData(null, res))
 
-    const router = new VueRouter({
-        routes: [
-            { path: '/add', component: Add },
-            { path: '/edit/:id', component: Edit },
-            { path: '/', component: List },
-            { path: '*', component: { template: '<div>NotFound</div>' } }
-        ],
-    })
+				this.$root.$emit('stop-loading')
+			},
+			setData (error, proxy) {
+				this.error = error
+				this.proxy = createProxy(proxy)
+			}
+		}
+	}
 
-    var app = new Vue({
-        router, el: '#app',
-        data () {
-            return { loading: false }
-        },
-        mounted () {
-            this.socket = new WebSocket('ws://' + location.hostname + ':' + location.port + '/ws')
-            this.socket.addEventListener('message', (event) => {
-                this.$root.$emit('proxies', JSON.parse(event.data))
-            })
+	const router = new VueRouter({
+		routes: [
+			{ path: '/add', component: Add },
+			{ path: '/edit/:id', component: Edit },
+			{ path: '/', component: List },
+			{ path: '*', component: { template: '<div>NotFound</div>' } }
+		],
+	})
 
-            this.$root.$on('start-loading', () => this.loading = true)
-            this.$root.$on('stop-loading', () => this.loading = false)
-        }
-    })
+	var app = new Vue({
+		router, el: '#app',
+		data () {
+			return { loading: false }
+		},
+		mounted () {
+			this.socket = new WebSocket('ws://' + location.hostname + ':' + location.port + '/ws')
+			this.socket.addEventListener('message', (event) => {
+				this.$root.$emit('proxies', JSON.parse(event.data))
+			})
+
+			this.$root.$on('start-loading', () => this.loading = true)
+			this.$root.$on('stop-loading', () => this.loading = false)
+		}
+	})
 </script>
 </body>
 </html>
