@@ -10,6 +10,7 @@ interface Args {
   operator: string,
   apiEndpoint: string,
   connectionString: string
+  proxyId: string
 }
 
 const getSignedClient = async (proxy: LocalProxy) => {
@@ -102,10 +103,12 @@ export default class LocalProxy extends Proxy {
     enabled,
     apiEndpoint,
     connectionString,
+    proxyId,
   }: Args) {
     super(
       connectionString,
       enabled,
+      proxyId
     );
 
     this.operator = 'UNKNOWN';

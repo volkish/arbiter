@@ -19,7 +19,6 @@ const arbiterConfig = require('./proxies.json') as {
 
 const proxies: Array<Proxy> = arbiterConfig
   .list
-  .filter(data => data.type !== 'MobileProxySpace')
   .map(data => ProxyFactory.createFromJSON(data)) // Создаем Proxy объект
   .sort((p1, p2) => p1.connectionString.localeCompare(p2.connectionString))
   .sort((p1, p2) => p1.constructor.name.localeCompare(p2.constructor.name));

@@ -48,11 +48,12 @@ export default abstract class Proxy extends EventEmitter {
   /** Требуется обслуживание */
   protected maintenance: boolean = false;
 
-  protected constructor (connectionString: string, enabled: boolean = false) {
+  protected constructor (connectionString: string, enabled: boolean = false, proxyId: string = '') {
     super();
 
     this.id = String(Math.floor(Math.random() * 100000000000));
     this.enabled = enabled;
+    this.proxyId = proxyId;
     this.connectionString = connectionString;
   }
 

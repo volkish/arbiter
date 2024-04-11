@@ -49,9 +49,7 @@ export default class MobileProxySpace extends Proxy {
   }
 
   constructor ({ proxyId, connectionString, enabled }: Args) {
-    super(connectionString, enabled)
-
-    this.proxyId = proxyId
+    super(connectionString, enabled, proxyId)
   }
 
   async update ({ connectionString, proxyId, enabled }: Args) {
