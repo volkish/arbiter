@@ -12,7 +12,7 @@ export default abstract class Proxy extends EventEmitter {
   /**
    * Идентификатор (случайное число)
    */
-  id: string;
+  id: number;
 
   /**
    * Строка подключения для браузера
@@ -51,7 +51,7 @@ export default abstract class Proxy extends EventEmitter {
   protected constructor (connectionString: string, enabled: boolean = false, proxyId: string = '') {
     super();
 
-    this.id = String(Math.floor(Math.random() * 100000000000));
+    this.id = Math.floor(Math.random() * 100000000000);
     this.enabled = enabled;
     this.proxyId = proxyId;
     this.connectionString = connectionString;
@@ -61,22 +61,28 @@ export default abstract class Proxy extends EventEmitter {
     this.emit('log', `[${new Date}] [${this.constructor.name}] [${this.connectionString}] ${message}`);
   }
 
-  available () {
-    return this.enabled && !this.maintenance && !this.lastError;
+  available (tokenPerRunLimit: number, activeTokenLimit = Infinity) {
+    return (
+      this.enabled // Включен
+      && !this.maintenance // Не ожидает перезагрузки
+      && !this.lastError // Нет ошибок
+      && this.tokensAcquired < tokenPerRunLimit // Суммарное кол-во выданных токенов меньше лимита
+      && this.activeTokens <= activeTokenLimit // Кол-во работающих токенов меньше максимального порога
+    );
   }
 
   /**
    * Получить токен подключения к прокси
-   * @param max
+   *
+   * @param {number} tokenPerRunLimit
+   * @param {number} activeTokenLimit
    */
-  acquire (max: number) {
-    if (!this.available()) {
+  acquire (tokenPerRunLimit: number, activeTokenLimit: number = Infinity) {
+    if (!this.available(tokenPerRunLimit, activeTokenLimit)) {
       return;
     }
 
-    if (this.tokensAcquired >= max) {
-      return;
-    } else if (++this.tokensAcquired === max) {
+    if (++this.tokensAcquired === tokenPerRunLimit) {
       this.maintenance = true;
     }
 

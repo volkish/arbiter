@@ -74,11 +74,39 @@
 		</div>
 
 		<div class="columns">
-			<form class="column is-half" method="post" @submit.prevent="updateLimit">
+			<form class="column is-4-desktop" method="post" @submit.prevent="updateLimit">
 				<div class="field">
-					<label class="label">Limit</label>
+					<label class="label">🚧 Максимум токенов до перезагрузки</label>
 					<div class="control">
 						<input class="input" type="number" min="1" max="100" v-model="limit">
+					</div>
+				</div>
+				<div class="field is-grouped">
+					<div class="control">
+						<button class="button is-link">Сохранить</button>
+					</div>
+				</div>
+			</form>
+
+			<form class="column is-4-desktop" method="post" @submit.prevent="updateActiveLimit">
+				<div class="field">
+					<label class="label">🟢 Максимум активных токенов</label>
+					<div class="control">
+						<input class="input" type="number" min="1" max="100" v-model="activeLimit">
+					</div>
+				</div>
+				<div class="field is-grouped">
+					<div class="control">
+						<button class="button is-link">Сохранить</button>
+					</div>
+				</div>
+			</form>
+
+			<form class="column is-4-desktop" method="post" @submit.prevent="updateTimeout">
+				<div class="field">
+					<label class="label">⌚ Таймаут прокси</label>
+					<div class="control">
+						<input class="input" type="number" min="1" max="60" v-model="timeout">
 					</div>
 				</div>
 				<div class="field is-grouped">
@@ -208,23 +236,43 @@
 	const List = {
 		template: '#list-template',
 		data () {
-			return { proxies: [], limit: '' }
+			return { proxies: [], limit: '', timeout: '', activeLimit: '' }
 		},
 		methods: {
-			updateLimit () {
+			async updateLimit () {
 				if (this.limit) {
-					fetch('/api/limit?limit=' + this.limit, {
-						method: 'POST',
-					})
+					const response = await fetch('/api/limit?limit=' + this.limit, { method: 'POST' })
+					const data = await response.json()
 
-					this.limit = ''
+					this.activeLimit = data.limit
+				}
+			},
+
+			async updateActiveLimit () {
+				if (this.activeLimit) {
+					const response = await fetch('/api/activeLimit?limit=' + this.activeLimit, { method: 'POST' })
+					const data = await response.json()
+
+					this.activeLimit = data.limit
+				}
+			},
+
+			async updateTimeout () {
+				if (this.timeout) {
+					const response = await fetch('/api/timeout?timeout=' + this.timeout, { method: 'POST' })
+					const data = await response.json()
+
+					this.timeout = data.timeout
 				}
 			}
 		},
 		mounted () {
 			this.$root.$emit('start-loading')
-			this.$root.$on('proxies', (proxies) => {
-				this.proxies = proxies
+			this.$root.$on('proxies', (data) => {
+				this.limit = data.limit
+				this.activeLimit = data.activeLimit
+				this.timeout = data.timeout
+				this.proxies = data.proxies
 					.map(createProxy)
 					.sort((p1, p2) => p1.connectionString.localeCompare(p2.connectionString))
 			})
@@ -234,7 +282,10 @@
 				.then(data => {
 					this.$root.$emit('stop-loading')
 
-					this.proxies = data
+					this.limit = data.limit
+					this.activeLimit = data.activeLimit
+					this.timeout = data.timeout
+					this.proxies = data.proxies
 						.map(createProxy)
 						.sort((p1, p2) => p1.connectionString.localeCompare(p2.connectionString))
 				})
