@@ -57,6 +57,10 @@ export default abstract class Proxy extends EventEmitter {
     this.connectionString = connectionString;
   }
 
+  get isMaintenance () {
+    return this.maintenance
+  }
+
   log (message: string): void {
     this.emit('log', `[${new Date}] [${this.constructor.name}] [${this.connectionString}] ${message}`);
   }

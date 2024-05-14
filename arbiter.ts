@@ -339,7 +339,10 @@ fastifyInstance.post('/api/proxies/:id', async (req: FastifyRequest<{
 
   // Если прокси включили, то нужно проверить статус
   if (proxy.enabled) {
-    await proxy.initialize()
+    // Если есть активные токены, то не инициализируем его.
+    if (proxy.activeTokens === 0) {
+      await proxy.initialize()
+    }
   } else {
     proxy.disable()
   }
