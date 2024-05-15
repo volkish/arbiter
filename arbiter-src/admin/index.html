@@ -52,7 +52,7 @@
 				<tr v-for="proxy in proxies">
 					<th>
 						<small style="white-space: nowrap">
-							{{ proxy.operator }} /
+							<span :style="{ color: proxy.operator === 'UNKNOWN' ? 'red': 'blue' }">{{ proxy.operator }}</span> /
 							{{ proxy.proxyId }}
 						</small>
 					</th>
