@@ -1,14 +1,15 @@
-import { copyFile, readFile, writeFile } from 'fs'
+import { copyFile, readFile, writeFile } from 'node:fs'
+import path from 'node:path'
 import fastify, { FastifyReply, FastifyRequest } from 'fastify'
+import fastifyWebsocket, { SocketStream } from '@fastify/websocket'
 import Proxy from './arbiter-src/proxy'
 import ProxyFactory from './arbiter-src/proxy-factory'
 import TokenRegistry from './arbiter-src/token-registry'
 import MobileProxySpace from './arbiter-src/mobile-proxy-space'
 import LocalProxy from './arbiter-src/local-proxy'
 import queue from './arbiter-src/queue'
-import fastifyWebsocket, { SocketStream } from '@fastify/websocket'
 
-const arbiterConfig = require('./proxies.json') as {
+const arbiterConfig = require(path.join(process.cwd(), 'proxies.json')) as {
   host: string,
   port: number,
   timeout?: number
@@ -28,7 +29,7 @@ const proxies: Array<Proxy> = arbiterConfig
   .sort((p1, p2) => p1.constructor.name.localeCompare(p2.constructor.name))
 
 /**
- * Чекалка модемов
+ * Проверка модемов
  */
 async function checkProxies () {
   const result = [], filteredProxies = proxies.filter(p => p.enabled && p.lastError && !p.restarting)
@@ -89,10 +90,13 @@ const fastifyInstance = fastify({
 fastifyInstance.register(fastifyWebsocket)
 fastifyInstance.register(async function (fastify) {
   fastify.get('/ws', { websocket: true }, (connection: SocketStream, req: FastifyRequest) => {
-    connection.socket.on('message', (_) => {
-      // message.toString() === 'hi from client'
-      // connection.socket.send('hi from server');
-    })
+    // Pass
+  })
+})
+
+fastifyInstance.register(async (fastify) => {
+  fastify.addHook('onResponse', (_, reply) => {
+    reply.header('Cache-Control', 'no-store')
   })
 })
 
@@ -107,14 +111,6 @@ function broadcast () {
     r(1)
   }).catch(() => void 0)
 }
-
-fastifyInstance.register(async (_, res, next) => {
-  next()
-
-  if (!res.headersSent) {
-    res.setHeader('Cache-Control', 'no-store')
-  }
-})
 
 // region Api
 
@@ -227,7 +223,7 @@ fastifyInstance.get('/list', async () => {
 
 fastifyInstance.get('/', (_, res) => {
   return new Promise(resolve => {
-    readFile('./arbiter-src/admin/index.html', (_, buffer) => {
+    readFile(path.join(process.cwd(), 'admin', 'index.html'), (_, buffer) => {
       resolve(
         res.code(200)
           .type('text/html')

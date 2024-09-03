@@ -358,8 +358,6 @@
 			async checkBalance () {
 				this.$root.$emit('start-loading')
 
-				console.log(this.proxy)
-
 				const response = await fetch('/api/balance/' + this.proxy.id)
 					.then(res => res.text())
 					.finally(() => this.$root.$emit('stop-loading'))

@@ -1,9 +1,9 @@
-import Token from './token';
-import { EventEmitter } from 'events';
-import axios, { AxiosError } from 'axios';
-import { delay } from './utils';
+import { EventEmitter } from 'events'
+import axios, { AxiosError } from 'axios'
+import { SocksProxyAgent } from 'socks-proxy-agent'
 
-const SocksProxyAgent = require('socks-proxy-agent');
+import Token from './token'
+import { delay } from './utils'
 
 export type Ip = string;
 
@@ -12,57 +12,53 @@ export default abstract class Proxy extends EventEmitter {
   /**
    * Идентификатор (случайное число)
    */
-  id: number;
+  id: number
 
   /**
    * Строка подключения для браузера
    */
-  connectionString: string;
+  connectionString: string
 
   /** Статус */
-  enabled: boolean;
+  enabled: boolean
 
   /** Количество активных токенов */
-  activeTokens: number = 0;
+  activeTokens: number = 0
 
   /** Время последнего доступа */
-  lastAccessTimestamp: number = 0;
+  lastAccessTimestamp: number = 0
 
   /** Ошибка */
-  lastError?: string;
+  lastError?: string
 
   /** Находится в состоянии перезагрузки */
-  restarting: boolean = false;
+  restarting: boolean = false
 
   /** Кол-во отданных токенов */
-  tokensAcquired: number = 0;
+  tokensAcquired: number = 0
 
   /** IP адрес */
-  ipAddress: string = '';
+  ipAddress: string = ''
 
   /**
    * Уникальный ИД (например телефон)
    */
-  proxyId: string = '';
+  proxyId: string = ''
 
   /** Требуется обслуживание */
-  protected maintenance: boolean = false;
+  protected maintenance: boolean = false
 
   protected constructor (connectionString: string, enabled: boolean = false, proxyId: string = '') {
-    super();
+    super()
 
-    this.id = Math.floor(Math.random() * 100000000000);
-    this.enabled = enabled;
-    this.proxyId = proxyId;
-    this.connectionString = connectionString;
-  }
-
-  get isMaintenance () {
-    return this.maintenance
+    this.id = Math.floor(Math.random() * 100000000000)
+    this.enabled = enabled
+    this.proxyId = proxyId
+    this.connectionString = connectionString
   }
 
   log (message: string): void {
-    this.emit('log', `[${new Date}] [${this.constructor.name}] [${this.connectionString}] ${message}`);
+    this.emit('log', `[${new Date}] [${this.constructor.name}] [${this.connectionString}] ${message}`)
   }
 
   available (tokenPerRunLimit: number, activeTokenLimit = Infinity) {
@@ -72,7 +68,7 @@ export default abstract class Proxy extends EventEmitter {
       && !this.lastError // Нет ошибок
       && this.tokensAcquired < tokenPerRunLimit // Суммарное кол-во выданных токенов меньше лимита
       && this.activeTokens <= activeTokenLimit // Кол-во работающих токенов меньше максимального порога
-    );
+    )
   }
 
   /**
@@ -83,71 +79,71 @@ export default abstract class Proxy extends EventEmitter {
    */
   acquire (tokenPerRunLimit: number, activeTokenLimit: number = Infinity) {
     if (!this.available(tokenPerRunLimit, activeTokenLimit)) {
-      return;
+      return
     }
 
     if (++this.tokensAcquired === tokenPerRunLimit) {
-      this.maintenance = true;
+      this.maintenance = true
     }
 
     // Активные токены
-    this.activeTokens++;
+    this.activeTokens++
 
     // Дата последнего доступа к прокси
-    this.lastAccessTimestamp = (new Date()).getTime();
+    this.lastAccessTimestamp = (new Date()).getTime()
 
-    const token = new Token();
+    const token = new Token()
 
     token.once('destroy', async () => {
-      this.activeTokens--;
+      this.activeTokens--
 
       // Активных токенов больше не осталось.
       // Если прокси требуется перезагрузка и прокси ещё включено, то перезагружаем
       if (this.activeTokens <= 0 && this.maintenance) {
-        this.emit('will-restart');
+        this.emit('will-restart')
 
         if (this.enabled) {
-          await this.restart();
+          await this.restart()
         }
 
-        this.activeTokens = 0;
-        this.maintenance = false;
-        this.emit('did-restart');
+        this.activeTokens = 0
+        this.maintenance = false
+        this.emit('did-restart')
       }
-    });
+    })
 
-    return token;
+    return token
   }
 
   /**
    * Перезагрузить прокси
    */
   async restart (): Promise<boolean> {
-    this.restarting = true; // Помечаем что прокси на обслуживании
-    this.lastError = undefined; // Сбрасываем ошибку
+    this.restarting = true // Помечаем что прокси на обслуживании
+    this.lastError = undefined // Сбрасываем ошибку
 
     try {
-      this.log('Перезагрузка...');
+      this.log('Перезагрузка...')
 
-      await this.performRestart();
+      await this.performRestart()
 
       // Чуть-чуть потупим
-      await delay(2000);
+      await delay(2000)
 
       // await this.testConnection()
-      await this.getIpAddress();
+      await this.getIpAddress()
 
-      this.tokensAcquired = 0; // Сбрасываем кол-во использованных токенов
-      this.log('Успешно перезагружен');
+      this.tokensAcquired = 0 // Сбрасываем кол-во использованных токенов
+      this.log('Успешно перезагружен')
 
-      return true;
+      return true
     } catch (e: any) {
-      this.lastError = e.message;
-      this.log('Не удалось перезагрузить: ' + e.message);
+      this.lastError = e.message
+      this.log('Не удалось перезагрузить: ' + e.message)
 
-      return false;
+      return false
     } finally {
-      this.restarting = false;
+      this.restarting = false
     }
   }
 
@@ -156,15 +152,15 @@ export default abstract class Proxy extends EventEmitter {
    */
   async checkStatus (): Promise<Ip> {
     try {
-      await this.performCheckStatus();
+      await this.performCheckStatus()
       // await this.testConnection()
-      await this.getIpAddress();
+      await this.getIpAddress()
 
-      return this.ipAddress;
+      return this.ipAddress
     } catch (e: any) {
-      this.log('Ошибка проверки статуса: ' + e.message);
+      this.log('Ошибка проверки статуса: ' + e.message)
 
-      return '';
+      return ''
     }
   }
 
@@ -180,36 +176,36 @@ export default abstract class Proxy extends EventEmitter {
    * Первичная проверка прокси
    */
   async initialize () {
-    this.tokensAcquired = 0;
-    this.activeTokens = 0;
-    this.lastError = undefined;
+    this.tokensAcquired = 0
+    this.activeTokens = 0
+    this.lastError = undefined
 
     // Прокси выключен, пропускаем инициализацию
     if (!this.enabled) {
-      return;
+      return
     }
 
-    // Времено отключем прокси на этапе инициализации
-    this.enabled = false;
+    // Временно отключаем прокси на этапе инициализации
+    this.enabled = false
 
-    // Проверяем, как себя чуствует прокси
+    // Проверяем, как себя чувствует прокси
     // если всё хорошо, то помечаем что прокси активный
     if (await this.checkStatus()) {
-      this.log('Прокси работает');
-      this.enabled = true;
+      this.log('Прокси работает')
+      this.enabled = true
     }
     // Пробуем сделать рестарт прокси
     else {
-      this.log(`Прокси не работает. Пробую сделать перезагрузку`);
+      this.log(`Прокси не работает. Пробую сделать перезагрузку`)
 
       if (await this.restart()) {
-        this.enabled = true;
+        this.enabled = true
       }
     }
   }
 
   /**
-   * Конверация прокси в JSON формат (Для сохранения)
+   * Конвертация прокси в JSON формат (Для сохранения)
    */
   toJson (): any {
     return {
@@ -217,7 +213,7 @@ export default abstract class Proxy extends EventEmitter {
       connectionString: this.connectionString,
       enabled: this.enabled,
       proxyId: this.proxyId,
-    };
+    }
   }
 
   /**
@@ -232,7 +228,7 @@ export default abstract class Proxy extends EventEmitter {
       maintenance: this.maintenance,
       restarting: this.restarting,
       tokensAcquired: this.tokensAcquired,
-    };
+    }
   }
 
   /**
@@ -246,51 +242,18 @@ export default abstract class Proxy extends EventEmitter {
   protected abstract performRestart (): Promise<void>;
 
   /**
-   * Проверяем коннект до удаленного сайта
-   * @private
-   */
-  private async testConnection (): Promise<void> {
-    try {
-      const httpAgent = new SocksProxyAgent(`socks5://${this.connectionString}`);
-      const client = axios.create({
-        baseURL: 'http://shxcraw.club',
-        headers: {
-          'Host': 'shxcraw.club',
-          'User-Agent': 'curl/7.64.1',
-        },
-        httpAgent: httpAgent,
-        maxRedirects: 0,
-        timeout: 4000,
-      });
-
-      const { data } = await client.get<string>('/');
-
-      if (!data.includes('Your new web server is ready to use')) {
-        // noinspection ExceptionCaughtLocallyJS
-        throw new Error('Не могу открыть shxcraw.club');
-      }
-
-      this.log('Успешно загрузил shxcraw.club');
-    } catch (e: AxiosError | any) {
-      throw new Error('Не смог загрузить robots.txt [' + e.message + '] [' + e.name + '] Data: ' + (
-        JSON.stringify(e.response?.data)
-      ) + ' Headers: ' + JSON.stringify(e.response?.headers));
-    }
-  }
-
-  /**
    * Получаем IP адрес на выходе
    * @private
    */
   private async getIpAddress (): Promise<void> {
-    this.log('Проверяю доступ в интернет');
+    this.log('Проверяю доступ в интернет')
 
-    let error: AxiosError;
+    let error: AxiosError
 
     // Пробуем 2 раза
     for (let i = 0; i < 2; i++) {
       try {
-        const httpAgent = new SocksProxyAgent(`socks5://${this.connectionString}`);
+        const httpAgent = new SocksProxyAgent(`socks5://${this.connectionString}`)
         const client = axios.create({
           baseURL: 'http://st.babysfera.ru',
           headers: {
@@ -300,29 +263,29 @@ export default abstract class Proxy extends EventEmitter {
           httpAgent: httpAgent,
           maxRedirects: 0,
           timeout: 4000,
-        });
+        })
 
-        this.ipAddress = (await client.get<string>('/myip')).data.trim();
-        this.log('IP: ' + this.ipAddress);
-        return;
+        this.ipAddress = (await client.get<string>('/myip')).data.trim()
+        this.log('IP: ' + this.ipAddress)
+        return
       } catch (e: AxiosError | any) {
-        error = e;
+        error = e
 
-        await delay(1000);
+        await delay(1000)
       }
     }
 
     throw new Error('Не смог проверить IP адрес [' + error!.message + '] [' + error!.name + ']' +
       ' Data: ' + JSON.stringify(error!.response?.data) +
       ' Headers: ' + JSON.stringify(error!.response?.headers)
-    );
+    )
   }
 
   disable () {
-    this.maintenance = false;
-    this.restarting = false;
-    this.tokensAcquired = 0;
-    this.lastAccessTimestamp = 0;
-    this.lastError = '';
+    this.maintenance = false
+    this.restarting = false
+    this.tokensAcquired = 0
+    this.lastAccessTimestamp = 0
+    this.lastError = ''
   }
 }
