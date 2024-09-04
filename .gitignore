@@ -3,3 +3,4 @@ proxies.json
 backup/
 bun.lockb
 dist
+.idea
