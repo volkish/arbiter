@@ -15,9 +15,6 @@
     "outDir": "dist",
     "lib": [
       "ESNext"
-    ],
-    "types": [
-      "./html.d.ts"
     ]
   },
   "include": [
