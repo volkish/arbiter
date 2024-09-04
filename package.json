@@ -4,7 +4,8 @@
     "start": "node dist/arbiter.js",
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -w -p tsconfig.json",
-    "ts-node": "ts-node arbiter.ts"
+    "ts-node": "ts-node arbiter.ts",
+    "prestart": "if ! [ -f proxies.json ]; then echo '{\"host\":\"127.0.0.1\",\"port\":\"8080\",\"list\":[]}' > proxies.json \nfi"
   },
   "devDependencies": {
     "@types/node": "^20.8.7",
