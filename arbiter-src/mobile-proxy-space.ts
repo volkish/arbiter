@@ -64,7 +64,7 @@ export default class MobileProxySpace extends Proxy {
 	return 'NOT_AVAILABLE';
   }
 
-  toJson (): any {
+  override toJson (): any {
     return {
       ...super.toJson(),
     }
@@ -100,7 +100,7 @@ export default class MobileProxySpace extends Proxy {
     this.log('Запрашиваю данные по прокси ' + this.proxyId)
 
     const proxies = await this.executeCommand<Array<IProxy>>('get_my_proxy')
-    const proxy = proxies[0]
+    const proxy = proxies[0]!
 
     this.log('Годен до: ' + proxy.proxy_exp)
     this.log('Оператор: ' + proxy.proxy_operator)

@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios'
+import axios, { type AxiosRequestConfig } from 'axios'
 import url from 'url'
 import { parseStringPromise } from 'xml2js'
 
@@ -178,7 +178,7 @@ export default class LocalProxy extends Proxy {
     }
   }
 
-  toJson (): any {
+  override toJson (): any {
     return {
       ...super.toJson(),
       operator: this.operator,

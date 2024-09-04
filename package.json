@@ -1,24 +1,26 @@
 {
-    "private": true,
-    "scripts": {
-        "start": "bun arbiter.ts",
-        "watch": "bun --watch arbiter.ts"
-    },
-    "devDependencies": {
-        "@types/node": "^20.8.7",
-        "@types/ws": "^8.5.8",
-        "@types/xml2js": "^0.4.14",
-        "axios": "^1.7.7",
-        "cross-env": "^5.1",
-        "typescript": "^5.2.2"
-    },
-    "dependencies": {
-        "@fastify/websocket": "^8.2.0",
-        "abort-controller": "^3.0.0",
-        "fastify": "^4.24.3",
-        "node-fetch": "^3.0.0",
-        "socks-proxy-agent": "^8.0.4",
-        "xml2js": "^0.6.2",
-        "yargs": "^17.0.1"
-    }
+  "name": "arbiter",
+  "scripts": {
+    "start": "node dist/arbiter.js",
+    "build": "tsc -p tsconfig.json",
+    "build:watch": "tsc -w -p tsconfig.json",
+    "ts-node": "ts-node arbiter.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.7",
+    "@types/ws": "^8.5.8",
+    "@types/xml2js": "^0.4.14",
+    "tsc": "^2.0.4",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@fastify/websocket": "^8.2.0",
+    "axios": "^1.7.7",
+    "abort-controller": "^3.0.0",
+    "fastify": "^4.24.3",
+    "node-fetch": "^3.0.0",
+    "socks-proxy-agent": "^8.0.4",
+    "xml2js": "^0.6.2",
+    "yargs": "^17.0.1"
+  }
 }
