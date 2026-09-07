@@ -255,9 +255,9 @@ export default abstract class Proxy extends EventEmitter {
       try {
         const httpAgent = new SocksProxyAgent(`socks5://${this.connectionString}`)
         const client = axios.create({
-          baseURL: 'http://st.babysfera.ru',
+          baseURL: 'http://62.213.87.57',
           headers: {
-            'Host': 'st.babysfera.ru',
+            'Host': '62.213.87.57',
             'User-Agent': 'bots',
           },
           httpAgent: httpAgent,
